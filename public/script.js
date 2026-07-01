@@ -1,57 +1,43 @@
 const socket = io("https://walkie-talkie-raincloud.up.railway.app", { transports: ['websocket'] });
-
-const roomScreen = document.getElementById('room-screen');
-const wtScreen = document.getElementById('wt-screen');
-const pttBtn = document.getElementById('ptt-btn');
-const statusText = document.getElementById('status');
-const userBadge = document.getElementById('user-badge'); // Badge baru
+const userListDiv = document.getElementById('user-list');
 let mediaRecorder;
 
-// Join Room
 document.getElementById('join-btn').addEventListener('click', () => {
-    const code = document.getElementById('room-code-input').value.trim();
-    if (!code) return alert("Masukkan kode!");
+    const name = document.getElementById('user-name').value.trim() || "Anonim";
+    const room = document.getElementById('room-code-input').value.trim();
+    if (!room) return alert("Masukkan kode!");
     
-    socket.emit('join-room', code);
-    document.getElementById('display-room-code').textContent = code;
+    socket.emit('join-room', { room, name });
+    document.getElementById('display-room-code').textContent = room;
+    document.getElementById('room-screen').classList.remove('active');
+    document.getElementById('wt-screen').classList.add('active');
     
-    roomScreen.classList.remove('active');
-    roomScreen.classList.add('hidden');
-    wtScreen.classList.remove('hidden');
-    wtScreen.classList.add('active');
-    
-    initMic();
-});
-
-// Update jumlah user secara Realtime
-socket.on('user-count', (count) => {
-    userBadge.textContent = `Online: ${count}`;
-});
-
-// Setup Mic
-function initMic() {
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
         mediaRecorder = new MediaRecorder(stream);
-        pttBtn.disabled = false;
-        mediaRecorder.ondataavailable = e => socket.emit('audio-message', { room: document.getElementById('display-room-code').textContent, audio: e.data });
+        document.getElementById('ptt-btn').disabled = false;
+        mediaRecorder.ondataavailable = e => socket.emit('audio-message', { room, audio: e.data });
     });
-}
+});
 
-// PTT Events
+socket.on('update-user-list', (users) => {
+    userListDiv.innerHTML = "<strong>Online:</strong> " + users.map(u => u.name).join(", ");
+});
+
+const pttBtn = document.getElementById('ptt-btn');
+const statusText = document.getElementById('status');
+
 const start = (e) => { e.preventDefault(); if(mediaRecorder) { mediaRecorder.start(); pttBtn.classList.add('active'); statusText.textContent = "Sedang Bicara..."; } };
-const stop = (e) => { e.preventDefault(); if(mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); pttBtn.classList.remove('active'); statusText.textContent = "Siap Digunakan"; } };
+const stop = (e) => { e.preventDefault(); if(mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); pttBtn.classList.remove('active'); statusText.textContent = "Siap"; } };
 
 pttBtn.addEventListener('touchstart', start, { passive: false });
 pttBtn.addEventListener('touchend', stop);
 pttBtn.addEventListener('mousedown', start);
 pttBtn.addEventListener('mouseup', stop);
 
-// Terima Audio
 socket.on('audio-broadcast', (data) => {
+    new Audio(URL.createObjectURL(new Blob([data]))).play();
     statusText.textContent = "Menerima Suara...";
-    const audio = new Audio(URL.createObjectURL(new Blob([data])));
-    audio.play();
-    audio.onended = () => statusText.textContent = "Siap Digunakan";
+    setTimeout(() => statusText.textContent = "Siap", 2000);
 });
 
 document.getElementById('leave-btn').addEventListener('click', () => window.location.reload());
