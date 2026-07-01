@@ -54,41 +54,24 @@ document.getElementById('switch-btn').addEventListener('click', () => {
     joinRoom(newRoom, name);
 });
 
-// 5. MIC MODE (PTT vs ALWAYS ON)
-document.getElementById('mode-ptt').addEventListener('click', () => {
-    isAlwaysOn = false;
-    document.getElementById('mode-ptt').classList.add('active');
-    document.getElementById('mode-always').classList.remove('active');
-    pttBtn.style.display = "block";
-    clearInterval(autoRecordInterval);
-    if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
-});
-
-document.getElementById('mode-always').addEventListener('click', () => {
-    isAlwaysOn = true;
-    document.getElementById('mode-ptt').classList.remove('active');
-    document.getElementById('mode-always').classList.add('active');
-    pttBtn.style.display = "none";
-    if (mediaRecorder) startAlwaysOn();
-});
-
+// 5. MIC MODE (Always On Anti-Delay)
 function startAlwaysOn() {
-    autoRecordInterval = setInterval(() => {
-        if (isAlwaysOn && mediaRecorder) {
-            if (mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-            } else {
-                mediaRecorder.start();
-            }
-        }
-    }, 1000);
+    clearInterval(autoRecordInterval);
+    // Hapus setInterval lama jika ada, gunakan start(250) langsung di MediaRecorder
+    if (mediaRecorder && mediaRecorder.state === "inactive") {
+        mediaRecorder.start(250); 
+    }
 }
 
-// 6. LOGIKA MIKROFON
+// 6. LOGIKA MIKROFON (Optimasi Codec)
 function initMic(room) {
+    if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-        mediaRecorder = new MediaRecorder(stream);
+        // Tambahkan codec opus agar lebih ringan dan cepat
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
         pttBtn.disabled = false;
+        
         mediaRecorder.ondataavailable = e => {
             if (e.data.size > 0) socket.emit('audio-message', { room, audio: e.data });
         };
@@ -111,35 +94,32 @@ socket.on('audio-broadcast', (data) => {
     setTimeout(() => statusText.textContent = "Siap Digunakan", 1000);
 });
 
-// 8. PTT EVENTS (Hanya jalan jika bukan mode Always On)
+// 8. PTT EVENTS
 const start = (e) => { 
     e.preventDefault(); 
+    // Pastikan hanya berjalan jika mode Always On tidak aktif
     if(!isAlwaysOn && mediaRecorder && mediaRecorder.state === "inactive") { 
-        mediaRecorder.start(); 
+        mediaRecorder.start(250); 
         pttBtn.classList.add('active'); 
         statusText.textContent = "Sedang Bicara..."; 
-   setInterval(() => {
-    if (isAlwaysOn && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
-    } else if (isAlwaysOn) {
-        mediaRecorder.start();
-    }
-}, 500);
     } 
 };
+
 const stop = (e) => { 
     e.preventDefault(); 
+    // Hentikan rekaman saat tombol dilepas
     if(!isAlwaysOn && mediaRecorder && mediaRecorder.state === "recording") { 
         mediaRecorder.stop(); 
         pttBtn.classList.remove('active'); 
         statusText.textContent = "Siap Digunakan"; 
     } 
 };
+if(!isAlwaysOn && mediaRecorder && mediaRecorder.state === "inactive") { 
+    mediaRecorder.start(250); // PTT sekarang juga pakai timeslice 250ms
+    pttBtn.classList.add('active'); 
+    statusText.textContent = "Sedang Bicara..."; 
+}
 
-pttBtn.addEventListener('mousedown', start);
-pttBtn.addEventListener('mouseup', stop);
-pttBtn.addEventListener('touchstart', start, { passive: false });
-pttBtn.addEventListener('touchend', stop);
 
 // 9. KELUAR
 document.getElementById('leave-btn').addEventListener('click', () => {
