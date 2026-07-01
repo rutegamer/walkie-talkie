@@ -3,18 +3,13 @@ window.onload = () => {
         .then(stream => console.log("Izin Mikrofon Diterima"))
         .catch(err => alert("Anda HARUS mengizinkan mikrofon untuk menggunakan aplikasi ini!"));
 };
+
 const socket = io("https://walkie-talkie-production-fe10.up.railway.app", {
     transports: ['websocket']
 });
 
-// Tambahkan baris ini:
-socket.on('connect', () => {
-    alert('Berhasil terhubung ke server!');
-});
-
-socket.on('connect_error', (err) => {
-    alert('Gagal terhubung: ' + err.message);
-});
+socket.on('connect', () => alert('Berhasil terhubung ke server!'));
+socket.on('connect_error', (err) => alert('Gagal terhubung: ' + err.message));
 
 const roomScreen = document.getElementById('room-screen');
 const wtScreen = document.getElementById('wt-screen');
@@ -23,7 +18,6 @@ const joinBtn = document.getElementById('join-btn');
 const leaveBtn = document.getElementById('leave-btn');
 const displayRoomCode = document.getElementById('display-room-code');
 const loadingText = document.getElementById('loading-text');
-
 const pttBtn = document.getElementById('ptt-btn');
 const statusText = document.getElementById('status');
 const audioPlayback = document.getElementById('audio-playback');
@@ -32,44 +26,27 @@ let mediaRecorder;
 let audioChunks = [];
 let currentRoom = null;
 
+// HANYA SATU EVENT LISTENER
 joinBtn.addEventListener('click', () => {
     const code = roomCodeInput.value.trim();
     if (code === "") return alert("Masukkan kode room!");
 
-    joinBtn.addEventListener('click', () => {
-    const code = roomCodeInput.value.trim();
-    console.log("Tombol diklik, kode:", code); // Cek apakah ini muncul di console laptop
-    
-    if (code === "") {
-        alert("Masukkan kode room!");
-        return;
-    }
-
     joinBtn.disabled = true;
     loadingText.classList.remove('hidden');
 
-    // Menghapus setTimeout agar perpindahan instan
     currentRoom = code;
     displayRoomCode.textContent = currentRoom;
-    
     socket.emit('join-room', currentRoom);
 
-    // Memastikan class CSS benar-benar berpindah
-    roomScreen.className = 'hidden'; // Force hide
-    wtScreen.className = 'active';   // Force show
+    // Perpindahan Layar
+    roomScreen.className = 'screen hidden'; 
+    wtScreen.className = 'screen active';
 
-    console.log("Perpindahan layar dipicu"); 
-    
     loadingText.classList.add('hidden');
-    joinBtn.disabled = false;
-    roomCodeInput.value = "";
-
     initMicrophone();
 });
 
-leaveBtn.addEventListener('click', () => {
-    window.location.reload(); 
-});
+leaveBtn.addEventListener('click', () => window.location.reload());
 
 function initMicrophone() {
     navigator.mediaDevices.getUserMedia({ audio: true })
@@ -79,33 +56,16 @@ function initMicrophone() {
             statusText.textContent = "Siap Digunakan";
             statusText.className = "status ready";
 
-            mediaRecorder.ondataavailable = event => {
-                if (event.data.size > 0) {
-                    audioChunks.push(event.data);
-                }
-            };
-
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
             mediaRecorder.onstop = () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                
-                socket.emit('audio-message', {
-                    room: currentRoom,
-                    audio: audioBlob
-                });
-
-                audioChunks = []; 
+                socket.emit('audio-message', { room: currentRoom, audio: audioBlob });
+                audioChunks = [];
                 statusText.textContent = "Pesan Terkirim";
-                
-                setTimeout(() => {
-                    if(statusText.textContent === "Pesan Terkirim") {
-                        statusText.textContent = "Siap Digunakan";
-                        statusText.className = "status ready";
-                    }
-                }, 1000);
+                setTimeout(() => statusText.textContent = "Siap Digunakan", 1000);
             };
         })
         .catch(err => {
-            console.error("Mic Ditolak:", err);
             statusText.textContent = "Mikrofon Ditolak";
             statusText.className = "status error";
         });
@@ -113,27 +73,17 @@ function initMicrophone() {
 
 socket.on('audio-broadcast', (audioData) => {
     statusText.textContent = "Menerima Suara...";
-    statusText.className = "status playing";
-
     const audioBlob = new Blob([audioData], { type: 'audio/webm' });
-    const audioUrl = URL.createObjectURL(audioBlob);
-    
-    audioPlayback.src = audioUrl;
+    audioPlayback.src = URL.createObjectURL(audioBlob);
     audioPlayback.play();
 });
-
-audioPlayback.onended = () => {
-    statusText.textContent = "Siap Digunakan";
-    statusText.className = "status ready";
-};
 
 const startRecording = (e) => {
     e.preventDefault();
     if (mediaRecorder && mediaRecorder.state === "inactive") {
         mediaRecorder.start();
         pttBtn.classList.add('active');
-        statusText.textContent = "Merekam (Bicara)...";
-        statusText.className = "status recording";
+        statusText.textContent = "Merekam...";
     }
 };
 
