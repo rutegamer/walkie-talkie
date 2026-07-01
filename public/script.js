@@ -36,26 +36,35 @@ joinBtn.addEventListener('click', () => {
     const code = roomCodeInput.value.trim();
     if (code === "") return alert("Masukkan kode room!");
 
+    joinBtn.addEventListener('click', () => {
+    const code = roomCodeInput.value.trim();
+    console.log("Tombol diklik, kode:", code); // Cek apakah ini muncul di console laptop
+    
+    if (code === "") {
+        alert("Masukkan kode room!");
+        return;
+    }
+
     joinBtn.disabled = true;
     loadingText.classList.remove('hidden');
 
-    setTimeout(() => {
-        currentRoom = code;
-        displayRoomCode.textContent = currentRoom;
-        
-        socket.emit('join-room', currentRoom);
+    // Menghapus setTimeout agar perpindahan instan
+    currentRoom = code;
+    displayRoomCode.textContent = currentRoom;
+    
+    socket.emit('join-room', currentRoom);
 
-        roomScreen.classList.remove('active');
-        roomScreen.classList.add('hidden');
-        wtScreen.classList.remove('hidden');
-        wtScreen.classList.add('active');
+    // Memastikan class CSS benar-benar berpindah
+    roomScreen.className = 'hidden'; // Force hide
+    wtScreen.className = 'active';   // Force show
 
-        joinBtn.disabled = false;
-        loadingText.classList.add('hidden');
-        roomCodeInput.value = "";
+    console.log("Perpindahan layar dipicu"); 
+    
+    loadingText.classList.add('hidden');
+    joinBtn.disabled = false;
+    roomCodeInput.value = "";
 
-        initMicrophone();
-    }, 1000); 
+    initMicrophone();
 });
 
 leaveBtn.addEventListener('click', () => {
