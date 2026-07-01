@@ -38,9 +38,9 @@ joinBtn.addEventListener('click', () => {
     displayRoomCode.textContent = currentRoom;
     socket.emit('join-room', currentRoom);
 
-    // Perpindahan Layar
-    roomScreen.className = 'screen hidden'; 
-    wtScreen.className = 'screen active';
+    // MENGGUNAKAN STYLE.DISPLAY SECARA LANGSUNG (LEBIH AMPUH)
+    roomScreen.style.display = 'none';
+    wtScreen.style.display = 'flex'; 
 
     loadingText.classList.add('hidden');
     initMicrophone();
