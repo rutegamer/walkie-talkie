@@ -1,27 +1,19 @@
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
 body { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #2c3e50; color: white; }
-.app-container { background-color: #1a252f; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 350px; }
+.app-container { background-color: #1a252f; padding: 40px; border-radius: 20px; text-align: center; width: 350px; }
 .screen { display: none; flex-direction: column; align-items: center; }
 .screen.active { display: flex; }
 .screen.hidden { display: none !important; }
-h1 { font-size: 24px; margin-bottom: 10px; color: #ecf0f1; }
-p { font-size: 14px; margin-bottom: 25px; color: #bdc3c7; }
-input[type="text"] { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #34495e; border-radius: 10px; background-color: #2c3e50; color: white; font-size: 18px; text-align: center; outline: none; }
-input[type="text"]:focus { border-color: #3498db; }
-.primary-btn { width: 100%; padding: 15px; background-color: #3498db; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-.primary-btn:hover { background-color: #2980b9; }
-.loading-text { margin-top: 15px; color: #f1c40f; font-size: 14px; font-weight: bold; animation: blink 1s infinite; }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-.header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 25px; border-bottom: 1px solid #34495e; padding-bottom: 15px; }
-.room-info { display: flex; align-items: center; gap: 8px; }
-.dot-indicator { width: 10px; height: 10px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 8px #2ecc71; }
-.header h2 { font-size: 18px; color: #ecf0f1; margin: 0; }
-.secondary-btn { padding: 8px 15px; background-color: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-.status { margin-bottom: 30px; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; text-transform: uppercase; }
-.ready { background-color: #27ae60; color: white; }
-.recording { background-color: #e74c3c; color: white; }
-.playing { background-color: #f39c12; color: white; }
-.error { background-color: #c0392b; color: white; }
-.ptt-btn { background-color: #e74c3c; color: white; border: none; border-radius: 50%; width: 150px; height: 150px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 8px #c0392b; transition: all 0.1s ease; user-select: none; -webkit-tap-highlight-color: transparent; }
-.ptt-btn:disabled { background-color: #7f8c8d; box-shadow: 0 8px #95a5a6; cursor: not-allowed; }
-.ptt-btn.active { background-color: #c0392b; box-shadow: 0 2px #7f261d; transform: translateY(6px); }
+input[type="text"] { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; background-color: #2c3e50; color: white; text-align: center; }
+.primary-btn { width: 100%; padding: 15px; background-color: #3498db; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+.ptt-btn { 
+    background-color: #e74c3c; color: white; border: none; border-radius: 50%; width: 150px; height: 150px; 
+    font-weight: bold; cursor: pointer; box-shadow: 0 8px #c0392b; 
+    transition: all 0.05s ease; 
+    touch-action: manipulation; /* Kunci agar responsif di HP */
+    -webkit-tap-highlight-color: transparent; 
+}
+.ptt-btn.active { background-color: #c0392b; transform: translateY(6px); }
+.status { margin: 20px 0; padding: 10px; border-radius: 5px; font-weight: bold; }
+.ready { background-color: #27ae60; }
+.recording { background-color: #e74c3c; }
