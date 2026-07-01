@@ -16,38 +16,29 @@ document.getElementById('join-btn').addEventListener('click', () => {
     wtScreen.classList.remove('hidden');
 });
 
-// Setup Mic saat pertama kali ditekan
+// Setup Mic (Minta Izin saat pertama kali klik)
 async function setupRecorder() {
     if (mediaRecorder) return;
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
         mediaRecorder.ondataavailable = e => socket.emit('audio-message', { audio: e.data });
-    } catch (e) { alert("Mic diperlukan!"); }
+    } catch (e) { alert("Mikrofon tidak diizinkan!"); }
 }
 
-// Event PTT
-pttBtn.addEventListener('touchstart', async (e) => {
-    e.preventDefault();
-    await setupRecorder();
-    mediaRecorder.start();
-    pttBtn.classList.add('active');
-    statusText.textContent = "Sedang Bicara...";
-}, { passive: false });
+// Event PTT (Mouse & Touch)
+const start = async (e) => { e.preventDefault(); await setupRecorder(); mediaRecorder.start(); pttBtn.classList.add('active'); statusText.textContent = "Sedang Bicara..."; };
+const stop = (e) => { e.preventDefault(); if(mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); pttBtn.classList.remove('active'); statusText.textContent = "Siap Digunakan"; } };
 
-pttBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
-        pttBtn.classList.remove('active');
-        statusText.textContent = "Siap Digunakan";
-    }
-});
+pttBtn.addEventListener('mousedown', start);
+pttBtn.addEventListener('mouseup', stop);
+pttBtn.addEventListener('touchstart', start, { passive: false });
+pttBtn.addEventListener('touchend', stop);
 
 // Terima Audio
 socket.on('audio-broadcast', (data) => {
+    statusText.textContent = "Menerima Suara...";
     const audio = new Audio(URL.createObjectURL(new Blob([data])));
     audio.play();
-    statusText.textContent = "Menerima Suara...";
     audio.onended = () => statusText.textContent = "Siap Digunakan";
 });
