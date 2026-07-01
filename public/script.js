@@ -1,4 +1,4 @@
-const socket = io();
+const socket = io("https://walkie-talkie-production-fe10.up.railway.app");
 
 const roomScreen = document.getElementById('room-screen');
 const wtScreen = document.getElementById('wt-screen');
