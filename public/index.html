@@ -9,7 +9,6 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Layar 1: Masuk Room -->
         <div id="room-screen" class="screen active">
             <h1>Walkie-Talkie</h1>
             <p>Masukkan identitas dan kode room.</p>
@@ -18,19 +17,21 @@
             <button id="join-btn" class="primary-btn">Masuk Room</button>
         </div>
 
-        <!-- Layar 2: Walkie-Talkie -->
         <div id="wt-screen" class="screen hidden">
             <div class="header">
                 <div class="room-info">
                     <h2>Room: <span id="display-room-code">----</span></h2>
-                    <!-- Badge jumlah user -->
                     <div id="user-badge" class="user-badge">Online: 0</div>
                 </div>
                 <button id="leave-btn" class="secondary-btn">Keluar</button>
             </div>
             
-            <!-- Daftar nama user (Fitur baru) -->
             <div id="user-list" class="user-list">Memuat daftar...</div>
+            
+            <div class="switch-room-container" style="display: flex; gap: 5px; margin-bottom: 15px;">
+                <input type="text" id="new-room-input" placeholder="Kode Room Baru" maxlength="8" style="margin-bottom: 0;">
+                <button id="switch-btn" class="secondary-btn" style="padding: 0 15px;">Pindah</button>
+            </div>
             
             <div id="status" class="status">Siap Digunakan</div>
             <button id="ptt-btn" class="ptt-btn" disabled>PUSH TO TALK</button>
