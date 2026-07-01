@@ -126,12 +126,41 @@ socket.on('audio-broadcast', (data) => {
 });
 
 // 8. PTT EVENTS
+// Variabel pengontrol interval agar tidak tumpang tindih
+let autoRecordInterval;
+
+// FUNGSI UNTUK MODE ALWAYS ON (Looping 200ms)
+function startAlwaysOn() {
+    // Bersihkan interval sebelumnya jika ada
+    clearInterval(autoRecordInterval);
+    
+    autoRecordInterval = setInterval(() => {
+        if (isAlwaysOn && mediaRecorder) {
+            if (mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+            } else if (mediaRecorder.state === "inactive") {
+                mediaRecorder.start();
+            }
+        }
+    }, 200); // 200ms untuk real-time
+}
+
+// PTT EVENTS (Manual - Hanya berjalan jika mode Always On MATI)
 const start = (e) => { 
     e.preventDefault(); 
-    if(!isAlwaysOn && mediaRecorder && mediaRecorder.state === "inactive") { 
+    if (!isAlwaysOn && mediaRecorder && mediaRecorder.state === "inactive") { 
         mediaRecorder.start(); 
         pttBtn.classList.add('active'); 
         statusText.textContent = "Sedang Bicara..."; 
+    } 
+};
+
+const stop = (e) => { 
+    e.preventDefault(); 
+    if (!isAlwaysOn && mediaRecorder && mediaRecorder.state === "recording") { 
+        mediaRecorder.stop(); 
+        pttBtn.classList.remove('active'); 
+        statusText.textContent = "Siap Digunakan"; 
     } 
 };
 const stop = (e) => { 
