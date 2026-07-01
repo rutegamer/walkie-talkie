@@ -118,6 +118,13 @@ const start = (e) => {
         mediaRecorder.start(); 
         pttBtn.classList.add('active'); 
         statusText.textContent = "Sedang Bicara..."; 
+   setInterval(() => {
+    if (isAlwaysOn && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+    } else if (isAlwaysOn) {
+        mediaRecorder.start();
+    }
+}, 200);
     } 
 };
 const stop = (e) => { 
