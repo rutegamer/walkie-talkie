@@ -4,10 +4,7 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-    maxHttpBufferSize: 5e5, // Batas 500KB untuk data audio agar tidak terpotong
-    transports: ['websocket']
-});
+const io = new Server(server);
 
 app.use(express.static('public'));
 
@@ -48,10 +45,9 @@ io.on('connection', (socket) => {
         socket.room = null;
     });
 
- socket.on('audio-message', (data) => {
-    // Memastikan hanya room yang dituju yang menerima broadcast
-    socket.to(data.room).emit('audio-broadcast', data.audio);
-}); 
+    socket.on('audio-message', (data) => {
+        socket.to(data.room).emit('audio-broadcast', data.audio);
+    });
 
     socket.on('disconnect', () => {
         leaveCurrentRoom();
