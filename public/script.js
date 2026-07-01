@@ -51,10 +51,6 @@ document.getElementById('switch-btn').addEventListener('click', () => {
     const newRoom = document.getElementById('new-room-input').value.trim();
     const name = localStorage.getItem('wt_name');
     if (!newRoom) return alert("Masukkan kode room baru!");
-    
-    // Bersihkan mode always on sebelum pindah
-    isAlwaysOn = false;
-    clearInterval(autoRecordInterval);
     joinRoom(newRoom, name);
 });
 
@@ -64,10 +60,8 @@ document.getElementById('mode-ptt').addEventListener('click', () => {
     document.getElementById('mode-ptt').classList.add('active');
     document.getElementById('mode-always').classList.remove('active');
     pttBtn.style.display = "block";
-    
     clearInterval(autoRecordInterval);
     if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
-    statusText.textContent = "Siap Digunakan";
 });
 
 document.getElementById('mode-always').addEventListener('click', () => {
@@ -75,12 +69,10 @@ document.getElementById('mode-always').addEventListener('click', () => {
     document.getElementById('mode-ptt').classList.remove('active');
     document.getElementById('mode-always').classList.add('active');
     pttBtn.style.display = "none";
-    statusText.textContent = "Mode Always On Aktif";
     if (mediaRecorder) startAlwaysOn();
 });
 
 function startAlwaysOn() {
-    clearInterval(autoRecordInterval);
     autoRecordInterval = setInterval(() => {
         if (isAlwaysOn && mediaRecorder) {
             if (mediaRecorder.state === "recording") {
@@ -89,24 +81,18 @@ function startAlwaysOn() {
                 mediaRecorder.start();
             }
         }
-    }, 1000); // Record per 1 detik
+    }, 1000);
 }
 
 // 6. LOGIKA MIKROFON
 function initMic(room) {
-    if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(track => track.stop());
-    
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
         mediaRecorder = new MediaRecorder(stream);
         pttBtn.disabled = false;
-        
         mediaRecorder.ondataavailable = e => {
             if (e.data.size > 0) socket.emit('audio-message', { room, audio: e.data });
         };
-    }).catch(err => {
-        console.error("Mic Error:", err);
-        alert("Akses mikrofon ditolak atau tidak tersedia.");
-    });
+    }).catch(err => console.error("Mic Error:", err));
 }
 
 // 7. SOCKET LISTENERS
@@ -122,45 +108,16 @@ socket.on('audio-broadcast', (data) => {
     const audio = new Audio(URL.createObjectURL(new Blob([data])));
     audio.play();
     statusText.textContent = "Menerima Suara...";
-    setTimeout(() => { if(!isAlwaysOn) statusText.textContent = "Siap Digunakan"; }, 1000);
+    setTimeout(() => statusText.textContent = "Siap Digunakan", 1000);
 });
 
-// 8. PTT EVENTS
-// Variabel pengontrol interval agar tidak tumpang tindih
-let autoRecordInterval;
-
-// FUNGSI UNTUK MODE ALWAYS ON (Looping 200ms)
-function startAlwaysOn() {
-    // Bersihkan interval sebelumnya jika ada
-    clearInterval(autoRecordInterval);
-    
-    autoRecordInterval = setInterval(() => {
-        if (isAlwaysOn && mediaRecorder) {
-            if (mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-            } else if (mediaRecorder.state === "inactive") {
-                mediaRecorder.start();
-            }
-        }
-    }, 200); // 200ms untuk real-time
-}
-
-// PTT EVENTS (Manual - Hanya berjalan jika mode Always On MATI)
+// 8. PTT EVENTS (Hanya jalan jika bukan mode Always On)
 const start = (e) => { 
     e.preventDefault(); 
-    if (!isAlwaysOn && mediaRecorder && mediaRecorder.state === "inactive") { 
+    if(!isAlwaysOn && mediaRecorder && mediaRecorder.state === "inactive") { 
         mediaRecorder.start(); 
         pttBtn.classList.add('active'); 
         statusText.textContent = "Sedang Bicara..."; 
-    } 
-};
-
-const stop = (e) => { 
-    e.preventDefault(); 
-    if (!isAlwaysOn && mediaRecorder && mediaRecorder.state === "recording") { 
-        mediaRecorder.stop(); 
-        pttBtn.classList.remove('active'); 
-        statusText.textContent = "Siap Digunakan"; 
     } 
 };
 const stop = (e) => { 
