@@ -11,7 +11,21 @@ app.use(express.static('public'));
 const rooms = {}; 
 
 io.on('connection', (socket) => {
+    
+    // Fungsi untuk membersihkan user dari room
+    const leaveCurrentRoom = () => {
+        if (socket.room && rooms[socket.room]) {
+            rooms[socket.room] = rooms[socket.room].filter(u => u.id !== socket.id);
+            io.to(socket.room).emit('update-user-list', rooms[socket.room]);
+            io.to(socket.room).emit('user-count', rooms[socket.room].length);
+            socket.leave(socket.room);
+        }
+    };
+
     socket.on('join-room', ({ room, name }) => {
+        // Bersihkan dulu dari room sebelumnya jika pindah
+        leaveCurrentRoom();
+
         socket.join(room);
         socket.room = room;
         socket.name = name;
@@ -19,28 +33,25 @@ io.on('connection', (socket) => {
         if (!rooms[room]) rooms[room] = [];
         rooms[room].push({ id: socket.id, name: name });
 
-        // PENTING: Kirim daftar nama DAN jumlah user
         io.to(room).emit('update-user-list', rooms[room]);
         io.to(room).emit('user-count', rooms[room].length);
         
         console.log(`User ${name} masuk ke room ${room}`);
     });
 
+    // Handler khusus untuk pindah room secara eksplisit
+    socket.on('leave-room', () => {
+        leaveCurrentRoom();
+        socket.room = null;
+    });
+
     socket.on('audio-message', (data) => {
-        // Meneruskan audio ke semua user di room tersebut
         socket.to(data.room).emit('audio-broadcast', data.audio);
     });
 
     socket.on('disconnect', () => {
-        if (socket.room && rooms[socket.room]) {
-            rooms[socket.room] = rooms[socket.room].filter(u => u.id !== socket.id);
-            
-            // PENTING: Update ulang daftar dan jumlah setelah user keluar
-            io.to(socket.room).emit('update-user-list', rooms[socket.room]);
-            io.to(socket.room).emit('user-count', rooms[socket.room].length);
-            
-            console.log(`User ${socket.name} keluar dari room ${socket.room}`);
-        }
+        leaveCurrentRoom();
+        console.log(`User terputus`);
     });
 });
 
