@@ -1,4 +1,3 @@
-
 const socket = io("https://walkie-talkie-raincloud.up.railway.app", { transports: ['websocket'] });
 
 // Elemen DOM
@@ -52,6 +51,10 @@ document.getElementById('switch-btn').addEventListener('click', () => {
     const newRoom = document.getElementById('new-room-input').value.trim();
     const name = localStorage.getItem('wt_name');
     if (!newRoom) return alert("Masukkan kode room baru!");
+    
+    // Bersihkan mode always on sebelum pindah
+    isAlwaysOn = false;
+    clearInterval(autoRecordInterval);
     joinRoom(newRoom, name);
 });
 
@@ -61,8 +64,10 @@ document.getElementById('mode-ptt').addEventListener('click', () => {
     document.getElementById('mode-ptt').classList.add('active');
     document.getElementById('mode-always').classList.remove('active');
     pttBtn.style.display = "block";
+    
     clearInterval(autoRecordInterval);
     if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+    statusText.textContent = "Siap Digunakan";
 });
 
 document.getElementById('mode-always').addEventListener('click', () => {
@@ -70,10 +75,12 @@ document.getElementById('mode-always').addEventListener('click', () => {
     document.getElementById('mode-ptt').classList.remove('active');
     document.getElementById('mode-always').classList.add('active');
     pttBtn.style.display = "none";
+    statusText.textContent = "Mode Always On Aktif";
     if (mediaRecorder) startAlwaysOn();
 });
 
 function startAlwaysOn() {
+    clearInterval(autoRecordInterval);
     autoRecordInterval = setInterval(() => {
         if (isAlwaysOn && mediaRecorder) {
             if (mediaRecorder.state === "recording") {
@@ -82,18 +89,24 @@ function startAlwaysOn() {
                 mediaRecorder.start();
             }
         }
-    }, 1000);
+    }, 1000); // Record per 1 detik
 }
 
 // 6. LOGIKA MIKROFON
 function initMic(room) {
+    if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
         mediaRecorder = new MediaRecorder(stream);
         pttBtn.disabled = false;
+        
         mediaRecorder.ondataavailable = e => {
             if (e.data.size > 0) socket.emit('audio-message', { room, audio: e.data });
         };
-    }).catch(err => console.error("Mic Error:", err));
+    }).catch(err => {
+        console.error("Mic Error:", err);
+        alert("Akses mikrofon ditolak atau tidak tersedia.");
+    });
 }
 
 // 7. SOCKET LISTENERS
@@ -109,10 +122,10 @@ socket.on('audio-broadcast', (data) => {
     const audio = new Audio(URL.createObjectURL(new Blob([data])));
     audio.play();
     statusText.textContent = "Menerima Suara...";
-    setTimeout(() => statusText.textContent = "Siap Digunakan", 1000);
+    setTimeout(() => { if(!isAlwaysOn) statusText.textContent = "Siap Digunakan"; }, 1000);
 });
 
-// 8. PTT EVENTS (Hanya jalan jika bukan mode Always On)
+// 8. PTT EVENTS
 const start = (e) => { 
     e.preventDefault(); 
     if(!isAlwaysOn && mediaRecorder && mediaRecorder.state === "inactive") { 
