@@ -1,5 +1,6 @@
 const socket = io("https://walkie-talkie-raincloud.up.railway.app", { transports: ['websocket'] });
 
+// Elemen DOM
 const roomScreen = document.getElementById('room-screen');
 const wtScreen = document.getElementById('wt-screen');
 const pttBtn = document.getElementById('ptt-btn');
@@ -7,36 +8,36 @@ const statusText = document.getElementById('status');
 const userBadge = document.getElementById('user-badge');
 const userListDiv = document.getElementById('user-list');
 
+// Variabel Mic Mode
 let mediaRecorder;
 let isAlwaysOn = false;
-let audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 // 1. FUNGSI UTAMA JOIN ROOM
 function joinRoom(room, name) {
     socket.emit('join-room', { room, name });
+    
+    // Simpan sesi
     localStorage.setItem('wt_room', room);
     localStorage.setItem('wt_name', name);
     
+    // Update Tampilan
     document.getElementById('display-room-code').textContent = room;
     roomScreen.classList.remove('active');
     roomScreen.classList.add('hidden');
     wtScreen.classList.remove('hidden');
     wtScreen.classList.add('active');
     
-    // Aktivasi AudioContext agar browser mengizinkan suara masuk
-    if (audioContext.state === 'suspended') audioContext.resume();
-    
     initMic(room);
 }
 
-// 2. CEK SESI
+// 2. CEK SESI SAAT REFRESH
 window.onload = () => {
     const savedRoom = localStorage.getItem('wt_room');
     const savedName = localStorage.getItem('wt_name');
     if (savedRoom && savedName) joinRoom(savedRoom, savedName);
 };
 
-// 3. EVENT JOIN & SWITCH
+// 3. EVENT JOIN
 document.getElementById('join-btn').addEventListener('click', () => {
     const name = document.getElementById('user-name').value.trim() || "Anonim";
     const room = document.getElementById('room-code-input').value.trim();
@@ -44,19 +45,23 @@ document.getElementById('join-btn').addEventListener('click', () => {
     joinRoom(room, name);
 });
 
+// 4. EVENT PINDAH ROOM
 document.getElementById('switch-btn').addEventListener('click', () => {
     const newRoom = document.getElementById('new-room-input').value.trim();
+    const name = localStorage.getItem('wt_name');
     if (!newRoom) return alert("Masukkan kode room baru!");
-    joinRoom(newRoom, localStorage.getItem('wt_name'));
+    joinRoom(newRoom, name);
 });
 
-// 4. MIC MODE
+// 5. MIC MODE (PTT vs ALWAYS ON) - DIOPTIMALKAN
 document.getElementById('mode-ptt').addEventListener('click', () => {
     isAlwaysOn = false;
     document.getElementById('mode-ptt').classList.add('active');
     document.getElementById('mode-always').classList.remove('active');
     pttBtn.style.display = "block";
+    
     if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+    statusText.textContent = "Siap Digunakan";
 });
 
 document.getElementById('mode-always').addEventListener('click', () => {
@@ -64,48 +69,56 @@ document.getElementById('mode-always').addEventListener('click', () => {
     document.getElementById('mode-ptt').classList.remove('active');
     document.getElementById('mode-always').classList.add('active');
     pttBtn.style.display = "none";
+    statusText.textContent = "Mode Always On Aktif";
+    
     if (mediaRecorder) {
         mediaRecorder.stop();
-        mediaRecorder.start(250); 
+        mediaRecorder.start(250); // Merekam & kirim otomatis tiap 250ms (Anti-Delay)
     }
 });
 
-// 5. LOGIKA MIKROFON
+// 6. LOGIKA MIKROFON (OPUS Codec)
 function initMic(room) {
+    if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        // Menggunakan codec opus untuk latensi rendah
         mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
         pttBtn.disabled = false;
         
         mediaRecorder.ondataavailable = e => {
             if (e.data.size > 0) socket.emit('audio-message', { room, audio: e.data });
         };
-    }).catch(err => alert("Izin mikrofon gagal: " + err));
+    }).catch(err => {
+        console.error("Mic Error:", err);
+        alert("Akses mikrofon ditolak atau tidak tersedia.");
+    });
 }
 
-// 6. SOCKET LISTENERS
+// 7. SOCKET LISTENERS
 socket.on('update-user-list', (users) => {
     userListDiv.innerHTML = "<strong>Online:</strong> " + users.map(u => u.name).join(", ");
 });
 
-socket.on('audio-broadcast', (data) => {
-    // Memutar audio dengan blob
-    const audioBlob = new Blob([data], { type: 'audio/webm' });
-    const audioUrl = URL.createObjectURL(audioBlob);
-    const audio = new Audio(audioUrl);
-    
-    // Perbaikan auto-play
-    audio.play().catch(e => {
-        console.warn("Auto-play diblokir, mohon klik layar");
-        document.addEventListener('click', () => audio.play(), { once: true });
-    });
+socket.on('user-count', (count) => {
+    userBadge.textContent = `Online: ${count}`;
 });
 
-// 7. PTT EVENTS
+socket.on('audio-broadcast', (data) => {
+    const audio = new Audio(URL.createObjectURL(new Blob([data], { type: 'audio/webm' })));
+    audio.play().catch(e => console.log("Audio play di-block browser"));
+    
+    statusText.textContent = "Menerima Suara...";
+    setTimeout(() => { if(!isAlwaysOn) statusText.textContent = "Siap Digunakan"; }, 500);
+});
+
+// 8. PTT EVENTS
 const start = (e) => { 
     e.preventDefault(); 
     if(!isAlwaysOn && mediaRecorder && mediaRecorder.state === "inactive") { 
-        mediaRecorder.start(250); 
+        mediaRecorder.start(250); // PTT juga pakai timeslice 250ms agar lancar
         pttBtn.classList.add('active'); 
+        statusText.textContent = "Sedang Bicara..."; 
     } 
 };
 const stop = (e) => { 
@@ -113,6 +126,7 @@ const stop = (e) => {
     if(!isAlwaysOn && mediaRecorder && mediaRecorder.state === "recording") { 
         mediaRecorder.stop(); 
         pttBtn.classList.remove('active'); 
+        statusText.textContent = "Siap Digunakan"; 
     } 
 };
 
@@ -121,7 +135,11 @@ pttBtn.addEventListener('mouseup', stop);
 pttBtn.addEventListener('touchstart', start, { passive: false });
 pttBtn.addEventListener('touchend', stop);
 
+// 9. KELUAR
 document.getElementById('leave-btn').addEventListener('click', () => {
     localStorage.clear();
     window.location.reload();
 });
+
+
+
