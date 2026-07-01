@@ -4,13 +4,7 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-
-// Konfigurasi IO dengan buffer untuk streaming audio yang lancar
-const io = new Server(server, {
-    maxHttpBufferSize: 1e6, // 1MB batas per pesan
-    transports: ['websocket'],
-    pingTimeout: 60000 // Menjaga koneksi tetap stabil
-});
+const io = new Server(server);
 
 app.use(express.static('public'));
 
@@ -29,8 +23,9 @@ io.on('connection', (socket) => {
     };
 
     socket.on('join-room', ({ room, name }) => {
-        leaveCurrentRoom(); // Bersihkan dari room lama sebelum join
-        
+        // Bersihkan dulu dari room sebelumnya jika pindah
+        leaveCurrentRoom();
+
         socket.join(room);
         socket.room = room;
         socket.name = name;
@@ -40,18 +35,18 @@ io.on('connection', (socket) => {
 
         io.to(room).emit('update-user-list', rooms[room]);
         io.to(room).emit('user-count', rooms[room].length);
+        
         console.log(`User ${name} masuk ke room ${room}`);
     });
 
-    // Meneruskan audio stream ke user lain di room yang sama
-    socket.on('audio-message', (data) => {
-        // Menggunakan broadcast untuk efisiensi
-        socket.to(data.room).emit('audio-broadcast', data.audio);
-    });
-
+    // Handler khusus untuk pindah room secara eksplisit
     socket.on('leave-room', () => {
         leaveCurrentRoom();
         socket.room = null;
+    });
+
+    socket.on('audio-message', (data) => {
+        socket.to(data.room).emit('audio-broadcast', data.audio);
     });
 
     socket.on('disconnect', () => {
