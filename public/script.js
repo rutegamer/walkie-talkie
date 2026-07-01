@@ -1,3 +1,8 @@
+window.onload = () => {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => console.log("Izin Mikrofon Diterima"))
+        .catch(err => alert("Anda HARUS mengizinkan mikrofon untuk menggunakan aplikasi ini!"));
+};
 const socket = io("https://walkie-talkie-production-fe10.up.railway.app", {
     transports: ['websocket']
 });
