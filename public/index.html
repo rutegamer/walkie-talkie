@@ -3,24 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Walkie-Talkie Mewah</title>
+    <title>Walkie-Talkie Web</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-container">
-        <!-- Room Screen -->
-        <div id="room-screen" class="screen">
+        <!-- Layar 1: Masuk Room -->
+        <div id="room-screen" class="screen active">
             <h1>Walkie-Talkie</h1>
-            <input type="text" id="room-code-input" placeholder="Masukkan Kode Room">
+            <p>Masukkan kode room untuk berbicara dengan teman.</p>
+            <input type="text" id="room-code-input" placeholder="Contoh: 1234" autocomplete="off" maxlength="8">
             <button id="join-btn" class="primary-btn">Masuk Room</button>
+            <p id="loading-text" class="loading-text hidden">Menghubungkan ke server...</p>
         </div>
-        <!-- Walkie-Talkie Screen -->
+
+        <!-- Layar 2: Walkie-Talkie -->
         <div id="wt-screen" class="screen hidden">
-            <button id="ptt-btn" class="ptt-btn">PTT</button>
-            <p id="status" class="status">Siap Digunakan</p>
+            <div class="header">
+                <div class="room-info">
+                    <span class="dot-indicator"></span>
+                    <h2>Room: <span id="display-room-code">----</span></h2>
+                </div>
+                <button id="leave-btn" class="secondary-btn">Keluar</button>
+            </div>
+            <div id="status" class="status ready">Menunggu Mikrofon...</div>
+            <button id="ptt-btn" class="ptt-btn" disabled>PUSH TO TALK</button>
+            <audio id="audio-playback" style="display: none;"></audio>
         </div>
     </div>
+
+    <!-- Script Socket.IO -->
     <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
