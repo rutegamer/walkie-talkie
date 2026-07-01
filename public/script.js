@@ -5,6 +5,7 @@ const wtScreen = document.getElementById('wt-screen');
 const pttBtn = document.getElementById('ptt-btn');
 const statusText = document.getElementById('status');
 let mediaRecorder;
+let audioChunks = [];
 
 // Join Room
 document.getElementById('join-btn').addEventListener('click', () => {
@@ -12,24 +13,41 @@ document.getElementById('join-btn').addEventListener('click', () => {
     if (!code) return alert("Masukkan kode!");
     
     socket.emit('join-room', code);
-    roomScreen.classList.add('hidden');
-    wtScreen.classList.remove('hidden');
+    roomScreen.style.display = 'none';
+    wtScreen.style.display = 'flex';
+    wtScreen.classList.add('active'); // Pastikan muncul
 });
 
-// Setup Mic saat pertama kali ditekan
-async function setupRecorder() {
-    if (mediaRecorder) return;
+// Fungsi Perizinan yang Aman
+async function getMicPermission() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = e => socket.emit('audio-message', { audio: e.data });
-    } catch (e) { alert("Mic diperlukan!"); }
+        
+        mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) audioChunks.push(e.data);
+        };
+        
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            socket.emit('audio-message', { audio: audioBlob });
+            audioChunks = [];
+        };
+        
+        return true;
+    } catch (err) {
+        alert("Akses Mikrofon ditolak! Aplikasi tidak bisa berjalan tanpa mikrofon.");
+        return false;
+    }
 }
 
 // Event PTT
 pttBtn.addEventListener('touchstart', async (e) => {
     e.preventDefault();
-    await setupRecorder();
+    if (!mediaRecorder) {
+        const granted = await getMicPermission();
+        if (!granted) return;
+    }
     mediaRecorder.start();
     pttBtn.classList.add('active');
     statusText.textContent = "Sedang Bicara...";
