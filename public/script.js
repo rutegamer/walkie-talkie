@@ -1,4 +1,4 @@
-const socket = io("walkie-talkie-raincloud.up.railway.app", { transports: ['websocket'] });
+const socket = io("https://walkie-talkie-raincloud.up.railway.app", { transports: ['websocket'] });
 
 const roomScreen = document.getElementById('room-screen');
 const wtScreen = document.getElementById('wt-screen');
@@ -29,6 +29,12 @@ joinBtn.addEventListener('click', () => {
     wtScreen.classList.add('active');
 
     initMicrophone();
+});
+
+// Tambahkan listener untuk jumlah user
+socket.on('user-count', (count) => {
+    // Menampilkan status di samping jumlah user
+    statusText.textContent = `Siap Digunakan (${count} orang online)`;
 });
 
 // Fungsi Mikrofon
