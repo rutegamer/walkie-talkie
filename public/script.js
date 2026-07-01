@@ -1,4 +1,4 @@
-const socket = io("https://walkie-talkie-production-fe10.up.railway.app", { transports: ['websocket'] });
+const socket = io("walkie-talkie-raincloud.up.railway.app", { transports: ['websocket'] });
 
 const roomScreen = document.getElementById('room-screen');
 const wtScreen = document.getElementById('wt-screen');
