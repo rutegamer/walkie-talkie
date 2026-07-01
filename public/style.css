@@ -48,7 +48,7 @@ input { width: 100%; padding: 15px; border-radius: 12px; border: none; backgroun
 
 .status { margin: 20px 0; color: #94a3b8; font-size: 14px; }
 
-/* Fitur Tambahan (Daftar User & Animasi) */
+/* User List & Animasi */
 .user-list { 
     background: rgba(0, 0, 0, 0.2); 
     padding: 12px; 
@@ -69,5 +69,36 @@ input { width: 100%; padding: 15px; border-radius: 12px; border: none; backgroun
 }
 .status.active { color: var(--primary); animation: pulse 1.5s infinite; font-weight: bold; }
 
+/* Styling Mic Controls (Baru) */
+.mic-controls { 
+    display: flex; 
+    gap: 10px; 
+    margin: 15px 0; 
+    justify-content: center; 
+}
+
+.mode-btn { 
+    padding: 8px 16px; 
+    border-radius: 20px; 
+    border: 1px solid var(--primary); 
+    background: transparent; 
+    color: white; 
+    cursor: pointer; 
+    transition: 0.3s; 
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.mode-btn.active { 
+    background: var(--primary); 
+    color: white; 
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+.mode-btn:hover { 
+    background: rgba(99, 102, 241, 0.2); 
+}
+
+/* Hover Effects */
 .primary-btn:hover { background: #4f46e5; transform: translateY(-2px); }
 .ptt-btn:hover { filter: brightness(1.2); }
