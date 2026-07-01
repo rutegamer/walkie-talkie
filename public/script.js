@@ -2,58 +2,44 @@ const socket = io("https://walkie-talkie-raincloud.up.railway.app", { transports
 
 const roomScreen = document.getElementById('room-screen');
 const wtScreen = document.getElementById('wt-screen');
-const roomCodeInput = document.getElementById('room-code-input');
-const joinBtn = document.getElementById('join-btn');
-const leaveBtn = document.getElementById('leave-btn');
-const displayRoomCode = document.getElementById('display-room-code');
 const pttBtn = document.getElementById('ptt-btn');
 const statusText = document.getElementById('status');
-const audioPlayback = document.getElementById('audio-playback');
-
+const userBadge = document.getElementById('user-badge'); // Badge baru
 let mediaRecorder;
-let audioChunks = [];
-let currentRoom = null;
 
-// Fungsi Masuk Room
-joinBtn.addEventListener('click', () => {
-    const code = roomCodeInput.value.trim();
-    if (code === "") return alert("Masukkan kode room!");
-
-    currentRoom = code;
-    displayRoomCode.textContent = currentRoom;
-    socket.emit('join-room', currentRoom);
-
+// Join Room
+document.getElementById('join-btn').addEventListener('click', () => {
+    const code = document.getElementById('room-code-input').value.trim();
+    if (!code) return alert("Masukkan kode!");
+    
+    socket.emit('join-room', code);
+    document.getElementById('display-room-code').textContent = code;
+    
     roomScreen.classList.remove('active');
     roomScreen.classList.add('hidden');
     wtScreen.classList.remove('hidden');
     wtScreen.classList.add('active');
-
-    initMicrophone();
+    
+    initMic();
 });
 
-// Tambahkan listener untuk jumlah user
+// Update jumlah user secara Realtime
 socket.on('user-count', (count) => {
-    // Menampilkan status di samping jumlah user
-    statusText.textContent = `Siap Digunakan (${count} orang online)`;
+    userBadge.textContent = `Online: ${count}`;
 });
 
-// Fungsi Mikrofon
-function initMicrophone() {
+// Setup Mic
+function initMic() {
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
         mediaRecorder = new MediaRecorder(stream);
         pttBtn.disabled = false;
-        
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = () => {
-            socket.emit('audio-message', { room: currentRoom, audio: new Blob(audioChunks) });
-            audioChunks = [];
-        };
-    }).catch(err => alert("Izin mikrofon diperlukan!"));
+        mediaRecorder.ondataavailable = e => socket.emit('audio-message', { room: document.getElementById('display-room-code').textContent, audio: e.data });
+    });
 }
 
-// Event PTT
-const start = (e) => { e.preventDefault(); if (mediaRecorder) { mediaRecorder.start(); pttBtn.classList.add('active'); statusText.textContent = "Merekam..."; } };
-const stop = (e) => { e.preventDefault(); if (mediaRecorder) { mediaRecorder.stop(); pttBtn.classList.remove('active'); statusText.textContent = "Siap Digunakan"; } };
+// PTT Events
+const start = (e) => { e.preventDefault(); if(mediaRecorder) { mediaRecorder.start(); pttBtn.classList.add('active'); statusText.textContent = "Sedang Bicara..."; } };
+const stop = (e) => { e.preventDefault(); if(mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); pttBtn.classList.remove('active'); statusText.textContent = "Siap Digunakan"; } };
 
 pttBtn.addEventListener('touchstart', start, { passive: false });
 pttBtn.addEventListener('touchend', stop);
@@ -63,9 +49,9 @@ pttBtn.addEventListener('mouseup', stop);
 // Terima Audio
 socket.on('audio-broadcast', (data) => {
     statusText.textContent = "Menerima Suara...";
-    audioPlayback.src = URL.createObjectURL(new Blob([data]));
-    audioPlayback.play();
-    audioPlayback.onended = () => statusText.textContent = "Siap Digunakan";
+    const audio = new Audio(URL.createObjectURL(new Blob([data])));
+    audio.play();
+    audio.onended = () => statusText.textContent = "Siap Digunakan";
 });
 
-leaveBtn.addEventListener('click', () => window.location.reload());
+document.getElementById('leave-btn').addEventListener('click', () => window.location.reload());
