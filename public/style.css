@@ -1,16 +1,17 @@
-:root { --primary: #6366f1; --bg: #0f172a; --card: #1e293b; }
+:root { --primary: #6366f1; --bg: #0f172a; }
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
 body { background: radial-gradient(circle at center, #1e293b, #0f172a); height: 100vh; display: flex; justify-content: center; align-items: center; color: white; }
 
-.app-container { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 40px; border-radius: 30px; width: 320px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+.app-container { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 40px; border-radius: 30px; width: 320px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }
 
 h1 { font-size: 24px; margin-bottom: 25px; background: linear-gradient(to right, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-input { width: 100%; padding: 16px; border-radius: 15px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 20px; }
+input { width: 100%; padding: 16px; border-radius: 15px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 20px; text-align: center; }
 
 .primary-btn { width: 100%; padding: 16px; background: var(--primary); border: none; border-radius: 15px; color: white; font-weight: 600; cursor: pointer; }
 
-.ptt-btn { width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, #ef4444, #991b1b); border: none; color: white; font-weight: bold; font-size: 16px; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3); transition: 0.3s; }
+.ptt-btn { width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, #ef4444, #991b1b); border: none; color: white; font-weight: bold; font-size: 16px; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3); transition: 0.3s; touch-action: manipulation; }
 .ptt-btn.active { transform: scale(0.9); box-shadow: 0 0 40px #ef4444; }
 
-.status { margin-top: 25px; font-size: 12px; color: #94a3b8; letter-spacing: 1px; }
+.status { margin-top: 25px; font-size: 12px; color: #94a3b8; }
+.hidden { display: none !important; }
