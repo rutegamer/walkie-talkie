@@ -1,25 +1,12 @@
-/* Warna dan Font Premium */
-:root { --primary: #6366f1; --bg: #0f172a; --card: #1e293b; --red: #ef4444; }
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
-
-body { background: radial-gradient(circle at center, #1e293b, #0f172a); height: 100vh; display: flex; justify-content: center; align-items: center; color: white; overflow: hidden; }
-
-/* Wadah Aplikasi */
-.app-container { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(20px); padding: 40px; border-radius: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.1); width: 90%; transition: 0.3s; }
-
-/* Tampilan Desktop Lebih Lebar */
-@media (min-width: 768px) { .app-container { width: 450px; padding: 60px; } }
-
-h1 { font-size: 26px; margin-bottom: 30px; background: linear-gradient(to right, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-input { width: 100%; padding: 18px; border-radius: 15px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 20px; text-align: center; font-size: 16px; }
-
-.primary-btn { width: 100%; padding: 18px; background: var(--primary); border: none; border-radius: 15px; color: white; font-weight: 700; cursor: pointer; transition: 0.3s; }
-.primary-btn:hover { transform: scale(1.02); }
-
-/* Tombol PTT Mewah */
-.ptt-btn { width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, #ef4444, #991b1b); border: none; color: white; font-weight: bold; font-size: 16px; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3); transition: 0.3s; touch-action: manipulation; }
-.ptt-btn.active { transform: scale(0.9); box-shadow: 0 0 40px #ef4444; }
-
-.status { margin-top: 30px; font-size: 14px; color: #94a3b8; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+body { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #2c3e50; color: white; }
+.app-container { background-color: #1a252f; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 350px; }
+.screen { display: none; flex-direction: column; align-items: center; }
+.screen.active { display: flex; }
+input[type="text"] { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; background-color: #2c3e50; color: white; border: 2px solid #34495e; text-align: center; font-size: 18px; }
+.primary-btn { width: 100%; padding: 15px; background-color: #3498db; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+.secondary-btn { padding: 8px 15px; background-color: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; }
+.ptt-btn { background-color: #e74c3c; color: white; border: none; border-radius: 50%; width: 150px; height: 150px; font-weight: bold; cursor: pointer; touch-action: manipulation; transition: 0.1s; box-shadow: 0 8px #c0392b; }
+.ptt-btn.active { background-color: #c0392b; transform: translateY(6px); box-shadow: 0 2px #7f261d; }
+.status { margin: 20px 0; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; text-transform: uppercase; background-color: #27ae60; }
 .hidden { display: none !important; }
