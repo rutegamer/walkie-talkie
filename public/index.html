@@ -2,38 +2,39 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Walkie-Talkie Web</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Walkie-Talkie Pro</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
         <!-- Layar 1: Masuk Room -->
         <div id="room-screen" class="screen active">
             <h1>Walkie-Talkie</h1>
-            <p>Masukkan kode room untuk berbicara dengan teman.</p>
+            <p>Masukkan kode room untuk bergabung.</p>
             <input type="text" id="room-code-input" placeholder="Contoh: 1234" autocomplete="off" maxlength="8">
             <button id="join-btn" class="primary-btn">Masuk Room</button>
-            <p id="loading-text" class="loading-text hidden">Menghubungkan ke server...</p>
         </div>
 
         <!-- Layar 2: Walkie-Talkie -->
         <div id="wt-screen" class="screen hidden">
             <div class="header">
                 <div class="room-info">
-                    <span class="dot-indicator"></span>
                     <h2>Room: <span id="display-room-code">----</span></h2>
+                    <!-- Badge User Online -->
+                    <div id="user-badge" class="user-badge">Online: 0</div>
                 </div>
                 <button id="leave-btn" class="secondary-btn">Keluar</button>
             </div>
-            <div id="status" class="status ready">Menunggu Mikrofon...</div>
+            
+            <div id="status" class="status ready">Siap Digunakan</div>
             <button id="ptt-btn" class="ptt-btn" disabled>PUSH TO TALK</button>
             <audio id="audio-playback" style="display: none;"></audio>
         </div>
     </div>
 
-    <!-- Script Socket.IO -->
     <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
