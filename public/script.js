@@ -1,4 +1,15 @@
-const socket = io("https://walkie-talkie-production-fe10.up.railway.app");
+const socket = io("https://walkie-talkie-production-fe10.up.railway.app", {
+    transports: ['websocket']
+});
+
+// Tambahkan baris ini:
+socket.on('connect', () => {
+    alert('Berhasil terhubung ke server!');
+});
+
+socket.on('connect_error', (err) => {
+    alert('Gagal terhubung: ' + err.message);
+});
 
 const roomScreen = document.getElementById('room-screen');
 const wtScreen = document.getElementById('wt-screen');
