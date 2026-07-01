@@ -4,7 +4,12 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+
+// Tambahkan opsi maxHttpBufferSize agar data audio tidak terpotong
+const io = new Server(server, {
+    maxHttpBufferSize: 1e6, // 1MB, cukup untuk data audio stream
+    transports: ['websocket']
+});
 
 app.use(express.static('public'));
 
@@ -12,7 +17,6 @@ const rooms = {};
 
 io.on('connection', (socket) => {
     
-    // Fungsi untuk membersihkan user dari room
     const leaveCurrentRoom = () => {
         if (socket.room && rooms[socket.room]) {
             rooms[socket.room] = rooms[socket.room].filter(u => u.id !== socket.id);
@@ -23,9 +27,7 @@ io.on('connection', (socket) => {
     };
 
     socket.on('join-room', ({ room, name }) => {
-        // Bersihkan dulu dari room sebelumnya jika pindah
         leaveCurrentRoom();
-
         socket.join(room);
         socket.room = room;
         socket.name = name;
@@ -35,18 +37,17 @@ io.on('connection', (socket) => {
 
         io.to(room).emit('update-user-list', rooms[room]);
         io.to(room).emit('user-count', rooms[room].length);
-        
         console.log(`User ${name} masuk ke room ${room}`);
     });
 
-    // Handler khusus untuk pindah room secara eksplisit
+    socket.on('audio-message', (data) => {
+        // Broadcast ke orang lain di room yang sama
+        socket.to(data.room).emit('audio-broadcast', data.audio);
+    });
+
     socket.on('leave-room', () => {
         leaveCurrentRoom();
         socket.room = null;
-    });
-
-    socket.on('audio-message', (data) => {
-        socket.to(data.room).emit('audio-broadcast', data.audio);
     });
 
     socket.on('disconnect', () => {
