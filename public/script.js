@@ -124,7 +124,7 @@ const start = (e) => {
     } else if (isAlwaysOn) {
         mediaRecorder.start();
     }
-}, 200);
+}, 500);
     } 
 };
 const stop = (e) => { 
