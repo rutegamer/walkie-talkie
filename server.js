@@ -21,7 +21,17 @@ io.on('connection', (socket) => {
             socket.leave(socket.room);
         }
     };
+// ... kode join-room dan leave-room Anda sebelumnya ...
 
+    // --- JALUR KHUSUS UNTUK APLIKASI ANDROID NATIVE ---
+    socket.on('audio_data', (buffer) => {
+        // Langsung sebarkan (broadcast) suara biner ke SEMUA orang 
+        // kecuali si pengirim, tanpa perlu masuk room.
+        socket.broadcast.emit('audio_data', buffer);
+    });
+    // --------------------------------------------------
+
+    // ... kode audio-message Anda sebelumnya ...
     socket.on('join-room', ({ room, name }) => {
         // Bersihkan dulu dari room sebelumnya jika pindah
         leaveCurrentRoom();
